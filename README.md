@@ -39,18 +39,21 @@ git clone https://github.com/ytdl-ui/yt_dlp_ui.git
 python yt_dlp_ui.py
 ```
 ## Screenshot 截图
+图床服务由[基岩云图床](https://image.wujiyan.cc)提供
 
-![screenshot](readme_image\tset.gif)
+Picture bed are provided by [基岩云图床](https://image.wujiyan.cc)
+
+![tset.gif](https://image.wujiyan.cc/imgs/2025/01/01/67750c4920c51.gif)
 
 # 免责声明
-本项目仅供学习交流使用，请遵守相关法律法规。否则后果自负。
+本项目仅供学习交流使用，请遵守相关法律法规。否则后果自负!!!
 
-下载视频时请遵守相关法律法规。注意版权问题，否则后果自负。
+下载视频时请遵守相关法律法规。注意版权问题，否则后果自负!!!
 
-请勿将本项目用于任何商业用途。否则后果自负。
+请勿将本项目用于任何商业用途。否则后果自负!!!
 
-This project is for learning and communication only, please comply with relevant laws and regulations. Any consequences will be your own.
+This project is for learning and communication only, please comply with relevant laws and regulations. Any consequences will be your own!!!
 
-By downloading videos, please comply with relevant laws and regulations. Note copyright issues, otherwise, it is your own consequences.
+By downloading videos, please comply with relevant laws and regulations. Note copyright issues, otherwise, it is your own consequences!!!
 
-Please do not use this project for any commercial purposes. Any consequences will be your own.
+Please do not use this project for any commercial purposes. Any consequences will be your own!!!
