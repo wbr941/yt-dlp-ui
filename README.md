@@ -36,7 +36,7 @@ git clone https://github.com/ytdl-ui/yt_dlp_ui.git
 
  Run:
  ```
-python yt_dlp_ui.py
+python main.py
 ```
 ## Screenshot 截图
 图床服务由[基岩云图床](https://image.wujiyan.cc)提供
