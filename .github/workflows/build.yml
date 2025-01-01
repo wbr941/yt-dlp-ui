@@ -19,24 +19,23 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.11'  # 你可以指定所需的 Python 版本
+        python-version: '3.x'  # 你可以指定所需的 Python 版本
 
     # 安装依赖
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        # 检查 requirements.txt 文件是否存在
         if (Test-Path "requirements.txt") { pip install -r requirements.txt }
         pip install pyinstaller  # 安装 PyInstaller 用于打包 EXE 文件
 
-    # 打包 .exe 文件
+    # 打包 .exe 文件，隐藏控制台窗口
     - name: Build EXE
       run: |
         # 获取当前日期并格式化为 YYYYMMDD
         $current_date = (Get-Date).ToString('yyyyMMdd')
         
-        # 使用 PyInstaller 打包
-        pyinstaller --onefile --add-data "gui.py;." --add-data "config.py;." --add-data "downloader.py;." --distpath output --name "main-$current_date" main.py
+        # 使用 PyInstaller 打包并隐藏控制台窗口
+        pyinstaller --onefile --windowed --add-data "gui.py;." --add-data "config.py;." --add-data "downloader.py;." --add-data "ffmpeg\bin\ffmpeg.exe;ffmpeg\bin" --distpath ./output --name "main-$current_date" main.py
       working-directory: .  # 设置工作目录为当前目录
 
     # 上传打包的 EXE 文件到 Artifacts（用于存储文件）
