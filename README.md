@@ -30,7 +30,7 @@ pip install yt-dlp
 
 Download this project:
 ```
-git clone https://github.com/ytdl-ui/yt_dlp_ui.git
+git clone https://github.com/wbr941/yt-dlp-ui.git
 ```
 运行：
 
