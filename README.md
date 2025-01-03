@@ -16,7 +16,7 @@ A GUI for yt-dlp, a command-line program to download videos from YouTube and oth
 
 **We will provide installation packages for Windows later, but for now, you need to manually install the required libraries.**
 
- 下载并安装Python（建议3.11版本）
+下载并安装Python（建议3.11版本）
 
 Download and install Python (version 3.11 is recommended)
 
