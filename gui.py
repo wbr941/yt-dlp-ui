@@ -6,11 +6,13 @@ from datetime import datetime
 from queue import Queue
 import time
 from styles import Styles, COLORS
+from rounded_frame import RoundedFrame
+from src.gui.frames.about_frame import AboutFrame
 
 class VideoDownloaderGUI:
     def __init__(self):
         self.root = Tk()
-        self.root.title("视频下载器")
+        self.root.title("yt-dlp-ui")
         self.root.geometry("1000x600")
         
         # 设置窗口样式
@@ -159,10 +161,20 @@ class VideoDownloaderGUI:
         )
         self.downloads_btn.pack(pady=5, padx=10, fill='x')
         
+        # 添加关于按钮
+        self.about_btn = Button(
+            self.nav_frame,
+            text="关于",
+            style='Nav.TButton',
+            command=lambda: self.show_frame("about")
+        )
+        self.about_btn.pack(pady=5, padx=10, fill='x')
+        
         # 创建不同的页面
         self.frames = {}
         self.setup_home_frame()
         self.setup_downloads_frame()
+        self.setup_about_frame()
         self.show_frame("home")
         
     def setup_home_frame(self):
@@ -172,25 +184,35 @@ class VideoDownloaderGUI:
         # 标题
         title_label = Label(
             home_frame, 
-            text="视频下载", 
+            text="yt-dlp-ui", 
             style='Title.TLabel'
         )
         title_label.pack(pady=(0, 30))
+
         
-        # 输入框和标签
-        prompt_label = Label(
-            home_frame, 
-            text="请输入视频链接:",
-            style='TLabel'
-        )
-        prompt_label.pack(pady=(0, 10))
+        # 创建搜索框容器
+        search_container = Frame(home_frame, style='TFrame')
+        search_container.pack(pady=(0, 20), fill='x', padx=50)
         
+        # 输入框和下载按钮在同一行
         self.url_entry = Entry(
-            home_frame,
+            search_container,
             width=50,
-            style='TEntry'
+            style='Search.TEntry'
         )
-        self.url_entry.pack(pady=(0, 20))
+        self.url_entry.pack(side='left', padx=(0, 10), fill='x', expand=True)
+        
+        # 绑定回车键
+        self.url_entry.bind('<Return>', lambda e: self.start_download())
+        
+        # 下载按钮
+        download_button = Button(
+            search_container,
+            text="开始下载",
+            style='Accent.TButton',
+            command=self.start_download
+        )
+        download_button.pack(side='left')
         
         # 创建右键菜单
         self.right_click_menu = Menu(self.root, tearoff=0)
@@ -198,22 +220,29 @@ class VideoDownloaderGUI:
         self.right_click_menu.add_command(label="粘贴", command=self.paste_text)
         self.url_entry.bind("<Button-3>", self.show_menu)
         
-        self.video_info_label = Label(
-            home_frame,
-            text="视频标题: \n平台: ",
-            style='TLabel'
-        )
-        self.video_info_label.pack(pady=10)
+        # 创建两个卡片容器
+        title_card = Frame(home_frame, style='Card.TFrame')
+        title_card.pack(pady=(10, 5), padx=50, fill='x')
         
-        # 下载按钮
-        download_button = Button(
-            home_frame,
-            text="开始下载",
-            style='Accent.TButton',
-            command=self.start_download
-        )
-        download_button.pack(pady=20)
+        platform_card = Frame(home_frame, style='Card.TFrame')
+        platform_card.pack(pady=(5, 10), padx=50, fill='x')
         
+        # 视频标题卡片
+        self.video_title_label = Label(
+            title_card,
+            text="视频标题: ",
+            style='Card.TLabel'
+        )
+        self.video_title_label.pack(fill='x', expand=True)
+        
+        # 平台信息卡片
+        self.platform_label = Label(
+            platform_card,
+            text="平台: ",
+            style='Card.TLabel'
+        )
+        self.platform_label.pack(fill='x', expand=True)
+
     def setup_downloads_frame(self):
         downloads_frame = Frame(self.content_frame, style='TFrame')
         self.frames["downloads"] = downloads_frame
@@ -226,43 +255,17 @@ class VideoDownloaderGUI:
         )
         title_label.pack(pady=(0, 30))
         
-        # 创建任务列表
-        columns = ("时间", "标题", "平台", "状态", "进度")
-        self.task_tree = Treeview(
-            downloads_frame,
-            columns=columns,
-            show="headings",
-            height=15,
-            style='Treeview'
-        )
+        # 创建任务列表容器
+        self.tasks_container = Frame(downloads_frame, style='TFrame')
+        self.tasks_container.pack(fill='both', expand=True, padx=20)
         
-        # 设置列宽度
-        widths = {
-            "时间": 100,
-            "标题": 400,
-            "平台": 120,
-            "状态": 100,
-            "进度": 100
-        }
-        
-        for col in columns:
-            self.task_tree.heading(col, text=col)
-            self.task_tree.column(col, width=widths[col])
-        
-        # 设置树形视图样式
-        Styles.setup_treeview(self.task_tree)
-        
-        # 添加滚动条
-        scrollbar = Scrollbar(
-            downloads_frame,
-            orient="vertical",
-            command=self.task_tree.yview
-        )
-        self.task_tree.configure(yscrollcommand=scrollbar.set)
-        
-        self.task_tree.pack(side="left", pady=20, fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
-        
+        # 存储任务卡片的字典
+        self.task_cards = {}
+
+    def setup_about_frame(self):
+        """设置关于页面"""
+        self.frames["about"] = AboutFrame(self.content_frame)
+
     def show_frame(self, frame_name):
         # 隐藏所有框架
         for frame in self.frames.values():
@@ -289,27 +292,94 @@ class VideoDownloaderGUI:
     def add_download_task(self, info):
         """添加新的下载任务到列表"""
         current_time = datetime.now().strftime("%H:%M:%S")
-        task_id = self.task_tree.insert("", "end", values=(
-            current_time,
-            info['title'],
-            info['extractor'],
-            "准备下载",
-            "0%"
-        ))
+        
+        # 创建圆角任务卡片
+        task_card = RoundedFrame(
+            self.tasks_container,
+            radius=8,
+            padding=2,
+            style='Task.TFrame'
+        )
+        task_card.pack(fill='x', pady=5, padx=10)
+        
+        # 使用内容框架
+        content = task_card.content_frame
+        
+        # 创建进度条背景（使用圆角框架）
+        progress_bg = RoundedFrame(
+            content,
+            radius=6,
+            padding=0,
+            style='Task.TFrame'
+        )
+        progress_bg.place(relwidth=1, relheight=1)
+        
+        # 创建进度条填充
+        progress_fill = RoundedFrame(
+            progress_bg.content_frame,
+            radius=6,
+            padding=0,
+            style='TaskProgress.TFrame'
+        )
+        progress_fill.place(relwidth=0, relheight=1)
+        
+        # 添加任务信息
+        info_frame = Frame(content, style='Task.TFrame')
+        info_frame.pack(fill='both', expand=True, padx=15, pady=10)
+        
+        time_label = Label(info_frame, text=current_time, style='Task.TLabel')
+        time_label.pack(side='left', padx=(0, 20))
+        
+        title_label = Label(info_frame, text=info['title'], style='Task.TLabel')
+        title_label.pack(side='left', padx=(0, 20), fill='x', expand=True)
+        
+        platform_label = Label(info_frame, text=info['extractor'], style='Task.TLabel')
+        platform_label.pack(side='left', padx=(0, 20))
+        
+        status_label = Label(info_frame, text="准备下载", style='Task.TLabel')
+        status_label.pack(side='left', padx=(0, 20))
+        
+        progress_label = Label(info_frame, text="0%", style='Task.TLabel')
+        progress_label.pack(side='left')
+        
+        # 存储任务信息
+        task_id = str(len(self.task_cards))
+        self.task_cards[task_id] = {
+            'card': task_card,
+            'progress_fill': progress_fill,
+            'status_label': status_label,
+            'progress_label': progress_label,
+            'value': 0
+        }
+        
         return task_id
-        
+
     def update_task_status(self, task_id, status, progress):
-        """更新任务状态时设置对应的标签"""
-        self.task_tree.set(task_id, "状态", status)
-        self.task_tree.set(task_id, "进度", progress)
-        
-        # 根据状态设置不同的标签
-        if status == "已完成":
-            self.task_tree.item(task_id, tags=('success',))
-        elif status == "下载中":
-            self.task_tree.item(task_id, tags=('warning',))
-        elif status == "失败":
-            self.task_tree.item(task_id, tags=('error',))
+        """更新任务状态和进度"""
+        if task_id in self.task_cards:
+            task_info = self.task_cards[task_id]
+            
+            # 更新状态文本
+            task_info['status_label'].config(text=status)
+            
+            try:
+                if '%' in progress:
+                    percent = float(progress.strip('%'))
+                    task_info['value'] = percent
+                    task_info['progress_label'].config(text=f"{percent:.1f}%")
+                    
+                    # 更新进度条
+                    task_info['progress_fill'].place(relwidth=percent/100)
+                    
+                    # 设置完成状态的特殊样式
+                    if status == "已完成":
+                        task_info['progress_fill'].configure(style='Success.TFrame')
+                    elif status == "失败":
+                        task_info['progress_fill'].configure(style='Error.TFrame')
+                else:
+                    task_info['progress_label'].config(text=progress)
+            except:
+                task_info['progress_label'].config(text=progress)
 
     def start_download(self):
         """开始下载任务"""
@@ -322,6 +392,14 @@ class VideoDownloaderGUI:
         
         def on_info_received(info):
             """当获取到视频信息后的回调"""
+            # 更新标签显示
+            self.video_title_label.config(
+                text=f"视频标题: {info['title']}"
+            )
+            self.platform_label.config(
+                text=f"平台: {info['extractor']}"
+            )
+            
             # 检查是否是合集视频
             entries = info.get('entries', [])
             if entries:
@@ -336,9 +414,6 @@ class VideoDownloaderGUI:
                     self.download_queue.put((entry.get('webpage_url', cleaned_url), task_id))
             else:
                 # 单个视频
-                self.video_info_label.config(
-                    text=f"视频标题: {info['title']}\n平台: {info['extractor']}"
-                )
                 task_id = self.add_download_task(info)
                 self.download_queue.put((cleaned_url, task_id))
             
